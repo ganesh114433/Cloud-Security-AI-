@@ -1,0 +1,49 @@
+pipelineInfo:
+  name: "retraining_pipeline"
+
+root:
+  inputDefinitions:
+    parameters:
+      - name: "training-data-path"
+        type: "String"
+
+  tasks:
+    - name: "data-preprocessing"
+      inputParameters:
+        - name: "training-data-path"
+          value: "{{$.inputs.parameters['training-data-path']}}"
+      componentRef:
+        name: "data-preprocessing-component"
+
+    - name: "model-training"
+      inputParameters:
+        - name: "preprocessed-data"
+          value: "{{$.tasks['data-preprocessing'].outputs['output']}}"
+      componentRef:
+        name: "model-training-component"
+
+    - name: "model-evaluation"
+      inputParameters:
+        - name: "trained-model"
+          value: "{{$.tasks['model-training'].outputs['model']}}"
+      componentRef:
+        name: "model-evaluation-component"
+      dependsOn:
+        - "data-preprocessing"
+        - "model-training"
+
+components:
+  - name: "data-preprocessing-component"
+    implementation:
+      container:
+        image: "gcr.io/YOUR_PROJECT_ID/data-preprocessing:latest"
+
+  - name: "model-training-component"
+    implementation:
+      container:
+        image: "gcr.io/YOUR_PROJECT_ID/model-training:latest"
+
+  - name: "model-evaluation-component"
+    implementation:
+      container:
+        image: "gcr.io/YOUR_PROJECT_ID/model-evaluation:latest"
